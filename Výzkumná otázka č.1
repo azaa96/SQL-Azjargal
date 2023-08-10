@@ -1,0 +1,30 @@
+/č.1 Rostou v průběhu let mzdy ve všech odvětvích, nebo v některých klesají?/
+
+CREATE VIEW v_AE_average_wage AS(
+SELECT
+	payroll_year,
+	industry_name,
+	ROUND(AVG(avg_wages),0) AS avg_hodnota
+FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf 
+WHERE industry_branch_code IS NOT NULL 
+GROUP BY 
+	industry_name,
+	payroll_year 
+);
+
+SELECT *
+FROM v_AE_average_wage AS  vaw;
+
+CREATE VIEW v_comparing_year AS
+SELECT 
+	vaw.payroll_year,
+	vaw.industry_name,
+	vaw.avg_hodnota,
+	vaw2.avg_hodnota AS next_avg_hodnota
+FROM v_AE_average_wage vaw
+LEFT JOIN v_AE_average_wage vaw2 
+		ON vaw.industry_name = vaw2.industry_name
+		AND vaw.payroll_year+1 = vaw2.payroll_year;
+
+SELECT *
+FROM v_comparing_year AS vcy;
