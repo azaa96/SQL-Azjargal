@@ -1,0 +1,24 @@
+/Tvorba sekundární tabulky/
+
+CREATE TABLE t_azjargal_enkhbayar_project_SQL_secondary_final AS (
+	SELECT 
+		c.continent,
+		c.country,
+		e.`year` AS year,
+		e.GDP,
+		e.taxes,
+		e.gini 
+	FROM countries c 
+	JOIN economies e 
+		ON c.country = e.country 
+	WHERE e.GDP IS NOT NULL 
+		AND e.`year` >= 2006
+		AND e.`year` <=2018
+)
+;
+
+
+/Kontrola sekundární tabulky/
+
+SELECT *
+FROM t_azjargal_enkhbayar_project_SQL_secondary_final ;
