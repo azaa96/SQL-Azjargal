@@ -1,0 +1,32 @@
+/4. Existuje rok, ve kterém byl meziroční nárůst cen potravin výrazně vyšší než růst mezd (větší než 10 %)?/
+
+WITH wage_avg AS (
+    SELECT 
+        payroll_year,
+        AVG(avg_wages) AS average_wage
+    FROM 
+        t_azjargal_enkhbayar_project_SQL_primary_final
+    GROUP BY 
+        payroll_year
+),
+food_avg AS (
+    SELECT
+        YEAR(date_from) AS food_year,
+        AVG(avg_price) AS average_price_of_food
+    FROM 
+        t_azjargal_enkhbayar_project_SQL_primary_final
+    GROUP BY 
+        food_year
+)
+SELECT 
+    w.payroll_year,
+    ROUND(((w.average_wage - wp.average_wage) / wp.average_wage * 100), 2) AS year_growth_wage,
+    ROUND(((f.average_price_of_food - fp.average_price_of_food) / fp.average_price_of_food * 100), 2) AS year_growth_food
+FROM
+    wage_avg w
+JOIN
+    wage_avg wp ON w.payroll_year = wp.payroll_year + 1
+JOIN
+    food_avg f ON w.payroll_year = f.food_year
+JOIN
+    food_avg fp ON w.payroll_year = fp.food_year + 1;
