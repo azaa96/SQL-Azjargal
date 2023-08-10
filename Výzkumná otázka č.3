@@ -1,0 +1,27 @@
+/3. Která kategorie potravin zdražuje nejpomaleji (je u ní nejnižší percentuální meziroční nárůst)?/
+
+SELECT 
+		cpc_code,
+		ROUND(AVG(perc_change), 2) AS average_perc_change
+FROM 
+	(
+	SELECT
+		cpc_code,
+		ROUND(AVG(avg_price), 2),
+		ROUND(((AVG(avg_price) - LAG(AVG(avg_price)) OVER (PARTITION BY cpc_code ORDER BY date_from)) 
+		/ LAG(AVG(avg_price)) OVER (PARTITION BY cpc_code ORDER BY date_from)) * 100, 2) AS perc_change
+	FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf  
+	GROUP BY 
+          cpc_code,
+          date_from
+	) AS subselect
+GROUP BY 
+	cpc_code 
+ORDER BY average_perc_change ASC
+LIMIT 1;
+
+SELECT 
+	cpc_name,
+	cpc_code 
+FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf 
+WHERE cpc_code ='118101';
