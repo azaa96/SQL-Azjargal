@@ -1,0 +1,40 @@
+/Tvorba primární tabulky/
+
+CREATE TABLE t_azjargal_enkhbayar_project_SQL_primary_final AS (
+SELECT
+	 cpc.name  AS cpc_name,
+	 cpc.code AS cpc_code,
+	 cpib.name AS industry_name,
+	 cpay.payroll_year, 
+	 cpay.payroll_quarter,
+	 AVG(cpay.value) AS avg_wages,
+	 cpay.industry_branch_code ,
+	 date_from,
+	 date_to,
+	 ROUND(AVG(cp.value),2) AS avg_price
+FROM czechia_price cp 
+JOIN czechia_payroll cpay  
+	ON YEAR(cp.date_from) = cpay.payroll_year 
+	AND cpay.value_type_code  = 5958 
+	AND cp.region_code IS NULL
+	AND cpay.unit_code = 200
+JOIN czechia_payroll_industry_branch cpib
+	ON cpay.industry_branch_code = cpib.code
+JOIN czechia_price_category cpc  
+	ON cp.category_code = cpc.code
+JOIN czechia_payroll_value_type cpvt
+    ON value_type_code  = cpvt.code
+    AND cpay.calculation_code = 100 
+    AND cpvt.code  = 5958
+WHERE cpay.value IS NOT NULL 
+GROUP BY 
+	cpc.code,
+	cpay.payroll_year, 
+	cpay.payroll_quarter,
+	cpay.industry_branch_code
+);
+
+/Kontrola primární tabulky/
+
+SELECT *
+FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf ;
