@@ -1,0 +1,42 @@
+/č.2 Kolik je možné si koupit litrů mléka a kilogramů chleba za první a poslední srovnatelné období v dostupných datech cen a mezd?/
+/první srovnatelné období/
+
+SELECT MIN(date_from)
+FROM czechia_price cp ;
+
+/výsledek 2006/
+
+/poslední srovnatelné období/
+
+SELECT MAX(date_to)
+FROM czechia_price cp ;
+
+/výsledek 2018/
+
+SELECT
+	payroll_year,
+	cpc_name,
+	ROUND(avg_price,2) AS price,
+	ROUND(AVG(avg_wages),2) AS avg_wages,
+	FLOOR(AVG(avg_wages)/AVG(avg_price))
+FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf 
+WHERE cpc_name IN ('Chléb konzumní kmínový')
+	AND payroll_year IN (2006, 2018)
+GROUP BY 
+	payroll_year,
+	cpc_name,
+	avg_price ;
+
+SELECT
+	payroll_year,
+	cpc_name,
+	ROUND(avg_price,2) AS price,
+	ROUND(AVG(avg_wages),2) AS avg_wages,
+	FLOOR(AVG(avg_wages)/AVG(avg_price))
+FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf 
+WHERE cpc_name IN ('Mléko polotučné pasterované')
+	AND payroll_year IN (2006, 2018)
+GROUP BY 
+	payroll_year,
+	cpc_name,
+	avg_price ;
