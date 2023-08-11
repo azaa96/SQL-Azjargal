@@ -1,0 +1,104 @@
+/5. Má výška HDP vliv na změny ve mzdách a cenách potravin? Neboli, pokud HDP vzroste výrazněji v jednom roce, projeví se to na cenách potravin či mzdách ve stejném nebo násdujícím roce výraznějším růstem?/
+
+/1.Vytvořila jsem view k získání informací o procentuální změně HDP mezi roky v České republice./
+
+CREATE VIEW v_AE_year_percent_HDP AS
+SELECT 
+    HDP.YEAR,
+    ROUND(((HDP.HDP - HDP_percent.HDP) / HDP_percent.HDP * 100), 2) AS year_percent_HDP
+FROM (
+    SELECT 
+        YEAR,
+        GDP AS HDP
+    FROM economies
+    WHERE country = 'Czech Republic'
+        AND GDP IS NOT NULL
+    GROUP BY YEAR DESC
+) HDP
+JOIN (
+    SELECT 
+        YEAR,
+        GDP AS HDP
+    FROM economies
+    WHERE country = 'Czech Republic'
+        AND GDP IS NOT NULL
+    GROUP BY YEAR DESC
+) HDP_percent
+ON HDP.YEAR = HDP_percent.YEAR + 1;
+
+/Kontrola vytvořeného viewu/
+
+SELECT *
+FROM v_AE_year_percent_HDP;
+
+/2.Poté jsem vytvořila view k získání informací o procentuální změně průměrných mezd mezi roky./   
+
+CREATE VIEW v_AE_year_percent_wages AS
+	(SELECT 
+		wages.payroll_year,
+		ROUND(((wages.avg_wages - wages_percent.avg_wages) / wages_percent.avg_wages * 100), 2) AS year_percent_wages
+	FROM	(SELECT 
+			ROUND(AVG(avg_wages)) AS avg_wages,
+			payroll_year
+		FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf 
+		GROUP BY payroll_year) wages
+	JOIN
+	(SELECT 
+			ROUND(AVG(avg_wages)) AS avg_wages,
+			payroll_year
+		FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf2 
+		GROUP BY payroll_year) wages_percent
+	ON wages.payroll_year = wages_percent.payroll_year + 1);
+
+/Kontrola vytvořeného viewu/
+
+SELECT *
+FROM v_AE_year_percent_wages;
+
+/3.Vytvořila jsem ještě view který zobrazuje procentuální změnu průměrných cen potravin mezi po sobě jdoucími roky./
+
+CREATE VIEW v_AE_year_percent_food AS
+	(SELECT
+		food_percent.year_food,
+		ROUND(((food.avg_price_of_food - food_percent.avg_price_of_food) / food_percent.avg_price_of_food * 100), 2) AS year_percent_food
+	FROM
+		(SELECT
+			ROUND(AVG(avg_price), 2) AS avg_price_of_food,
+			CASE 
+				WHEN YEAR(date_from) = YEAR(date_to) THEN YEAR(date_from)
+			END AS year_food		
+		FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf 
+		GROUP BY year_food) food
+	JOIN
+		(SELECT
+			ROUND(AVG(avg_price), 2) AS avg_price_of_food,
+			CASE 
+				WHEN YEAR(date_from) = YEAR(date_to) THEN YEAR(date_from)
+			END AS year_food		
+		FROM t_azjargal_enkhbayar_project_SQL_primary_final taepspf2 
+		GROUP BY year_food) food_percent
+	ON food.year_food = food_percent.year_food + 1);
+
+/Kontrola vytvořeného viewu/
+
+SELECT *
+FROM v_AE_year_percent_food;
+
+/4. Spojím tři views v_AE_year_percent_HDP, v_AE_year_percent_wages a v_AE_year_percent_food na základě společného roku. Výsledkem je seznam let, spolu s procentuálními změnami HDP, mezd a cen potravin./
+
+SELECT 
+    year_HDP.YEAR,
+    year_HDP.year_percent_HDP,
+    year_wages.year_percent_wages,
+    year_food.year_percent_food
+FROM
+    v_AE_year_percent_HDP year_HDP
+JOIN
+    v_AE_year_percent_wages year_wages
+    ON year_HDP.YEAR = year_wages.payroll_year
+JOIN 
+    v_AE_year_percent_food year_food
+    ON year_HDP.YEAR = year_food.year_food	
+GROUP BY year_HDP.YEAR;
+
+ 
